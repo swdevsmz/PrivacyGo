@@ -18,6 +18,8 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
+#include <array>
+#include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <utility>

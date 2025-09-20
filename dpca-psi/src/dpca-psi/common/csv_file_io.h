@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <fstream>
 #include <string>
 #include <utility>

@@ -14,35 +14,83 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# 実行バイナリ・設定ファイル・ログのディレクトリパスを設定
 BIN_DIR="@BIN_DIR@"
 JSON_DIR="@JSON_DIR@"
 LOG_DIR="@LOG_DIR@"
 
+# ログ保存用ディレクトリを作成
 mkdir -p "${LOG_DIR}/ppam/test/balanced"
 mkdir -p "${LOG_DIR}/ppam/test/unbalanced"
 
+# 送信者側の特徴量サイズ
 sender_feature_size=2
+# デフォルトtau値（差分プライバシー用）
 default_tau_array=(722)
+
+############################################################
+# バランス型テスト
+# → 送信者・受信者のデータセットサイズが同程度（intersection_ratio=2）
+#    ＝現実的な「対等な規模の2者間」での集合交差を想定
+#    例：両者とも同じくらいのユーザー数を持つ場合
+############################################################
 balanced_log_path_bandwith="${LOG_DIR}/ppam/test/balanced"
 echo "Sender balanced test"
+# バランス型の交差サイズ配列
 balanced_intersection_size_array=(1)
 for(( i=0;i<${#balanced_intersection_size_array[@]};i++))
 do
-echo "Test intersection size ${balanced_intersection_size_array[i]}"
+echo "Test intersection size ${balanced_intersection_size_array[i]}"  # 現在の交差サイズを表示
+############################################################
+# 差分プライバシー有り（with dp）
+#   - 個人情報保護のため、計算結果に「ノイズ（揺らぎ）」を加える方式
+#   - これにより、特定個人のデータが推測されにくくなる
+#   - 例：集計値や交差サイズにランダムな値を加算
+#   - 背景：プライバシーリスクを低減しつつ有用な統計情報を得るため
+############################################################
 echo "with dp"
 "${BIN_DIR}/ppam_example" --config_path="${JSON_DIR}/sender_with_precomputed_tau.json" --log_path=$balanced_log_path_bandwith --intersection_size=${balanced_intersection_size_array[i]} --intersection_ratio=2 --feature_size=$sender_feature_size --use_default_tau=true --default_tau=${default_tau_array[i]}
+############################################################
+# 差分プライバシー無し（without dp）
+#   - ノイズを加えず、実データそのままの計算結果を返す方式
+#   - 結果の正確性は高いが、個人情報が推測されるリスクが高まる
+#   - 例：交差サイズや集計値がそのまま出力される
+#   - 背景：プライバシー保護よりも正確性を重視する場合に利用
+############################################################
 echo "without_dp"
 "${BIN_DIR}/ppam_example" --config_path="${JSON_DIR}/sender_without_dp.json" --log_path=$balanced_log_path_bandwith --intersection_size=${balanced_intersection_size_array[i]} --intersection_ratio=2 --feature_size=$sender_feature_size
 done
 
+
+############################################################
+# アンバランス型テスト
+# → 送信者・受信者のデータセットサイズが大きく異なる（intersection_ratio=100）
+#    ＝「大規模な一方と小規模な一方」の間での集合交差を想定
+#    例：大手サービスと小規模サービス間のデータ連携
+############################################################
 unbalanced_log_path_bandwith="${LOG_DIR}/ppam/test/unbalanced"
 echo "Sender unbalanced test"
+# アンバランス型の交差サイズ配列
 unbalanced_intersection_size_array=(10)
 for(( i=0;i<${#unbalanced_intersection_size_array[@]};i++))
 do
 echo "Test intersection size ${unbalanced_intersection_size_array[i]}"
+############################################################
+# 差分プライバシー有り（with dp）
+#   - 個人情報保護のため、計算結果に「ノイズ（揺らぎ）」を加える方式
+#   - これにより、特定個人のデータが推測されにくくなる
+#   - 例：集計値や交差サイズにランダムな値を加算
+#   - 背景：プライバシーリスクを低減しつつ有用な統計情報を得るため
+############################################################
 echo "with dp"
 "${BIN_DIR}/ppam_example" --config_path="${JSON_DIR}/sender_with_precomputed_tau.json" --log_path=$unbalanced_log_path_bandwith --intersection_size=${unbalanced_intersection_size_array[i]} --intersection_ratio=100 --feature_size=$sender_feature_size --use_default_tau=true --default_tau=${default_tau_array[i]}
+############################################################
+# 差分プライバシー無し（without dp）
+#   - ノイズを加えず、実データそのままの計算結果を返す方式
+#   - 結果の正確性は高いが、個人情報が推測されるリスクが高まる
+#   - 例：交差サイズや集計値がそのまま出力される
+#   - 背景：プライバシー保護よりも正確性を重視する場合に利用
+############################################################
 echo "without_dp"
 "${BIN_DIR}/ppam_example" --config_path="${JSON_DIR}/sender_without_dp.json" --log_path=$unbalanced_log_path_bandwith --intersection_size=${unbalanced_intersection_size_array[i]} --intersection_ratio=100 --feature_size=$sender_feature_size
 done

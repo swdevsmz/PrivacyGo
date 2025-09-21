@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# このスクリプトはDPCA-PSIサンプルプログラムの送信側（sender）テストを自動実行します。
+# - BIN_DIR, JSON_DIR, LOG_DIR: 実行バイナリ・設定ファイル・ログ出力先のディレクトリを指定
+# - balanced（均等）・unbalanced（非均等）なデータセットでテストを実施
+# - 各テストで差分プライバシー（with dp）有無の両方を実行
+# - テスト結果はログディレクトリに出力
+
 # Copyright 2023 TikTok Pte. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,31 +24,39 @@ BIN_DIR="@BIN_DIR@"
 JSON_DIR="@JSON_DIR@"
 LOG_DIR="@LOG_DIR@"
 
+# ログ出力先ディレクトリを作成
 mkdir -p "${LOG_DIR}/dpca-psi/test/balanced"
 mkdir -p "${LOG_DIR}/dpca-psi/test/unbalanced"
 
 sender_feature_size=1
+# テスト用パラメータ（tau）
 default_tau_array=(722)
+
+# --- バランス型（均等）テスト ---
 balanced_log_path_bandwith="${LOG_DIR}/dpca-psi/test/balanced"
 echo "Sender balanced test"
 balanced_intersection_size_array=(500)
 for(( i=0;i<${#balanced_intersection_size_array[@]};i++))
 do
-echo "Test intersection size ${balanced_intersection_size_array[i]}"
-echo "with dp"
-"${BIN_DIR}/dpca_psi_example" --config_path="${JSON_DIR}/sender_with_precomputed_tau.json" --log_path=$balanced_log_path_bandwith --use_random_data=true --intersection_size=${balanced_intersection_size_array[i]} --intersection_ratio=2 --feature_size=$sender_feature_size --use_default_tau=true --default_tau=${default_tau_array[i]}
-echo "without_dp"
-"${BIN_DIR}/dpca_psi_example" --config_path="${JSON_DIR}/sender_without_dp.json" --log_path=$balanced_log_path_bandwith --use_random_data=true --intersection_size=${balanced_intersection_size_array[i]} --intersection_ratio=2 --feature_size=$sender_feature_size
+  echo "Test intersection size ${balanced_intersection_size_array[i]}"
+  echo "with dp"  # 差分プライバシー有効
+  "${BIN_DIR}/dpca_psi_example" --config_path="${JSON_DIR}/sender_with_precomputed_tau.json" --log_path=$balanced_log_path_bandwith --use_random_data=true --intersection_size=${balanced_intersection_size_array[i]} --intersection_ratio=2 --feature_size=$sender_feature_size --use_default_tau=true --default_tau=${default_tau_array[i]}
+  echo "without_dp"  # 差分プライバシー無効
+  "${BIN_DIR}/dpca_psi_example" --config_path="${JSON_DIR}/sender_without_dp.json" --log_path=$balanced_log_path_bandwith --use_random_data=true --intersection_size=${balanced_intersection_size_array[i]} --intersection_ratio=2 --feature_size=$sender_feature_size
 done
 
+# --- アンバランス型（非均等）テスト ---
 unbalanced_log_path_bandwith="${LOG_DIR}/dpca-psi/test/unbalanced"
 echo "Sender unbalanced test"
 unbalanced_intersection_size_array=(10)
 for(( i=0;i<${#unbalanced_intersection_size_array[@]};i++))
 do
-echo "Test intersection size ${unbalanced_intersection_size_array[i]}"
-echo "with dp"
-"${BIN_DIR}/dpca_psi_example" --config_path="${JSON_DIR}/sender_with_precomputed_tau.json" --log_path=$unbalanced_log_path_bandwith --use_random_data=true --intersection_size=${unbalanced_intersection_size_array[i]} --intersection_ratio=100 --feature_size=$sender_feature_size --use_default_tau=true --default_tau=${default_tau_array[i]}
-echo "without_dp"
-"${BIN_DIR}/dpca_psi_example" --config_path="${JSON_DIR}/sender_without_dp.json" --log_path=$unbalanced_log_path_bandwith --use_random_data=true --intersection_size=${unbalanced_intersection_size_array[i]} --intersection_ratio=100 --feature_size=$sender_feature_size
+  echo "Test intersection size ${unbalanced_intersection_size_array[i]}"
+  echo "with dp"  # 差分プライバシー有効
+  "${BIN_DIR}/dpca_psi_example" --config_path="${JSON_DIR}/sender_with_precomputed_tau.json" --log_path=$unbalanced_log_path_bandwith --use_random_data=true --intersection_size=${unbalanced_intersection_size_array[i]} --intersection_ratio=100 --feature_size=$sender_feature_size --use_default_tau=true --default_tau=${default_tau_array[i]}
+  echo "without_dp"  # 差分プライバシー無効
+  "${BIN_DIR}/dpca_psi_example" --config_path="${JSON_DIR}/sender_without_dp.json" --log_path=$unbalanced_log_path_bandwith --use_random_data=true --intersection_size=${unbalanced_intersection_size_array[i]} --intersection_ratio=100 --feature_size=$sender_feature_size
 done
+
+# 各テストで intersection_size, intersection_ratio, feature_size などのパラメータを変え、
+# 差分プライバシー有無の比較を自動で行うスクリプトです。

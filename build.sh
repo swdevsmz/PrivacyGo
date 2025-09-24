@@ -1,10 +1,20 @@
 #!/bin/bash
 
 
+
 echo "NASM をインストール中..."
 sudo apt update
 sudo apt install -y nasm
 echo "NASM のインストールが完了しました。"
+
+# cmakeがインストールされていない場合はインストール
+if ! command -v cmake &> /dev/null; then
+  echo "cmake が見つかりません。インストールします。"
+  sudo apt install -y cmake
+  echo "cmake のインストールが完了しました。"
+else
+  echo "cmake は既にインストールされています。"
+fi
 
 
 

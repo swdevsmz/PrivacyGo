@@ -1,3 +1,20 @@
+# cmakeがインストールされていない場合はインストール
+if ! command -v cmake &> /dev/null; then
+  echo "cmake が見つかりません。インストールします。"
+  sudo apt install -y cmake
+  echo "cmake のインストールが完了しました。"
+else
+  echo "cmake は既にインストールされています。"
+fi
+
+# OpenSSLがインストールされていない場合はインストール
+if ! dpkg -s libssl-dev &> /dev/null; then
+  echo "OpenSSL (libssl-dev) が見つかりません。インストールします。"
+  sudo apt install -y libssl-dev
+  echo "OpenSSL (libssl-dev) のインストールが完了しました。"
+else
+  echo "OpenSSL (libssl-dev) は既にインストールされています。"
+fi
 #!/bin/bash
 
 
